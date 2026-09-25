@@ -112,4 +112,7 @@ if (( ${#BUILD_DEPS[@]} )); then dnf5 -y remove "${BUILD_DEPS[@]}" || true; fi
 dnf5 clean all
 rm -rf "${WORK}" /root/.local /root/.config /root/.cache /root/.themes /root/.icons
 
+# Keep the ISO builder from tripping over repos that Bazzite switched off.
+bash "${CTX}/fix-repos.sh"
+
 echo "Bayzite ${DESKTOP} build finished."
