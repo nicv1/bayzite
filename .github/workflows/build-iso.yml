@@ -102,6 +102,7 @@ jobs:
           image: ${{ env.IMAGE_REF }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: anaconda-iso
+          rootfs: btrfs
           additional-args: --use-librepo=True
 
       - name: Name the ISO and add a checksum
