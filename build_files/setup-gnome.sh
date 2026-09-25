@@ -36,7 +36,8 @@ mkdir -p "${LIBADW_HOME}"
 chown -R 65534:65534 "${WORK}/gtk-user" "${LIBADW_HOME}"
 ( cd "${WORK}/gtk-user" && setpriv --reuid=65534 --regid=65534 --clear-groups \
     env HOME="${LIBADW_HOME}" USER=nobody SUDO_USER=nobody PATH="${PATH}" \
-    ./install.sh -l -c dark -o normal </dev/null )
+    ./install.sh -l -c dark -o normal </dev/null ) \
+  || echo "NOTE: WhiteSur's extra per-user theme copy failed; the libadwaita files are checked below"
 
 SKEL_GTK4=/etc/skel/.config/gtk-4.0
 mkdir -p "${SKEL_GTK4}"
