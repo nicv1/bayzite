@@ -1,0 +1,149 @@
+---
+name: Build Bayzite images
+
+# Builds the four Bayzite editions on top of the latest Bazzite and publishes
+# them to GitHub Container Registry (ghcr.io/<you>/bayzite-*).
+# Runs when you push changes, once a day (to pick up Bazzite updates), or by hand.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+  schedule:
+    - cron: "20 7 * * *" # daily
+  workflow_dispatch:
+
+env:
+  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: bayzite-gnome
+            base: ghcr.io/ublue-os/bazzite-gnome:stable
+            desktop: gnome
+            title: "Bayzite GNOME (AMD/Intel)"
+          - name: bayzite-gnome-nvidia
+            base: ghcr.io/ublue-os/bazzite-gnome-nvidia-open:stable
+            desktop: gnome
+            title: "Bayzite GNOME (NVIDIA)"
+          - name: bayzite-kde
+            base: ghcr.io/ublue-os/bazzite:stable
+            desktop: kde
+            title: "Bayzite KDE (AMD/Intel)"
+          - name: bayzite-kde-nvidia
+            base: ghcr.io/ublue-os/bazzite-nvidia-open:stable
+            desktop: kde
+            title: "Bayzite KDE (NVIDIA)"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Maximize build space
+        uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
+
+      - name: Prepare names
+        run: |
+          {
+            echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}"
+            echo "IMAGE_NAME=${{ matrix.name }}"
+            echo "DATE_TAG=$(date -u +%Y%m%d)"
+          } >> "$GITHUB_ENV"
+
+      # The wallpapers are generated from tools/make_wallpapers.py if they
+      # aren't already in the repository (e.g. when uploaded without images).
+      - name: Generate wallpapers
+        run: |
+          set -euxo pipefail
+          WP=system_files/shared/usr/share/backgrounds/bayzite
+          if [[ ! -f "$WP/bayzite-dusk.jpg" || ! -f "$WP/bayzite-dawn.jpg" || ! -f "$WP/bayzite-dusk-blur.png" ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq python3-numpy python3-pil
+            python3 tools/make_wallpapers.py "$WP"
+          fi
+          ls -l "$WP"
+
+      - name: Build image
+        run: |
+          set -euxo pipefail
+          podman build \
+            --pull=newer \
+            --build-arg BASE_IMAGE="${{ matrix.base }}" \
+            --build-arg DESKTOP="${{ matrix.desktop }}" \
+            --label org.opencontainers.image.title="${{ matrix.title }}" \
+            --label org.opencontainers.image.description="macOS-style Bazzite (${{ matrix.title }})" \
+            --label org.opencontainers.image.source="https://github.com/${{ github.repository }}" \
+            --label org.opencontainers.image.version="${DATE_TAG}" \
+            --label org.opencontainers.image.created="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --tag "${IMAGE_NAME}:latest" \
+            --file Containerfile .
+
+      # Splits the image into many layers so later updates download less.
+      - name: Rechunk
+        run: |
+          set -euxo pipefail
+          GRAPHROOT="$(podman info --format '{{.Store.GraphRoot}}')"
+          podman run --rm --pull=never --privileged \
+            --mount=type=image,src="${IMAGE_NAME}:latest",target=/rpm-ostree \
+            --mount=type=bind,src="${GRAPHROOT}",target=/run/host-container-storage,rw \
+            --mount=type=tmpfs,target=/run/rpm-ostree-storage \
+            --entrypoint /usr/bin/rpm-ostree \
+            "localhost/${IMAGE_NAME}:latest" \
+            compose build-chunked-oci \
+            --max-layers 127 \
+            --format-version=2 \
+            --bootc \
+            --rootfs /rpm-ostree \
+            --output "containers-storage:[overlay@/run/host-container-storage+/run/rpm-ostree-storage]localhost/${IMAGE_NAME}:latest"
+          podman tag "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${DATE_TAG}"
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GHCR
+        if: github.event_name != 'pull_request'
+        id: push
+        run: |
+          set -euxo pipefail
+          for tag in latest "${DATE_TAG}"; do
+            podman push --digestfile=/tmp/digestfile "${IMAGE_NAME}:${tag}" "${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}"
+          done
+          echo "digest=$(cat /tmp/digestfile)" >> "$GITHUB_OUTPUT"
+
+      # Optional: only runs if you added a SIGNING_SECRET (see docs/ADVANCED.md).
+      - name: Install Cosign
+        if: github.event_name != 'pull_request' && env.SIGNING_SECRET != ''
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.1.2"
+
+      - name: Sign image
+        if: github.event_name != 'pull_request' && env.SIGNING_SECRET != ''
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          cosign sign -y --new-bundle-format=false --use-signing-config=false \
+            --key env://COSIGN_PRIVATE_KEY "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"

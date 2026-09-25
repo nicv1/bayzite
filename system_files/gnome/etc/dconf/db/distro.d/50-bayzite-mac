@@ -1,0 +1,158 @@
+# Bayzite: macOS-style GNOME defaults.
+# Loaded after Bazzite's own 00-/01- files, so these values win.
+# Users can still change anything in Settings; these are only defaults.
+
+############################ Look & feel ############################
+[org/gnome/desktop/interface]
+gtk-theme='WhiteSur-Dark'
+icon-theme='WhiteSur-dark'
+cursor-theme='WhiteSur-cursors'
+cursor-size=24
+color-scheme='prefer-dark'
+accent-color='blue'
+font-name='Inter 11'
+document-font-name='Inter 11'
+monospace-font-name='JetBrains Mono 10'
+font-antialiasing='rgba'
+font-hinting='slight'
+clock-format='12h'
+clock-show-date=true
+clock-show-weekday=true
+clock-show-seconds=false
+show-battery-percentage=true
+enable-hot-corners=false
+
+[org/gnome/desktop/wm/preferences]
+# Traffic-light buttons on the left, like macOS
+button-layout='close,minimize,maximize:'
+titlebar-font='Inter Bold 11'
+action-double-click-titlebar='toggle-maximize'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/bayzite/bayzite-dawn.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/bayzite/bayzite-dusk.jpg'
+picture-options='zoom'
+primary-color='#16122e'
+secondary-color='#16122e'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/bayzite/bayzite-dusk.jpg'
+picture-options='zoom'
+primary-color='#16122e'
+secondary-color='#16122e'
+
+[org/gnome/mutter]
+center-new-windows=true
+attach-modal-dialogs=true
+dynamic-workspaces=true
+edge-tiling=true
+
+############################ Input (MacBook-style) ############################
+[org/gnome/desktop/peripherals/touchpad]
+tap-to-click=true
+natural-scroll=true
+two-finger-scrolling-enabled=true
+click-method='fingers'
+
+############################ Keyboard shortcuts ############################
+# Super is the Linux "Command" key.
+[org/gnome/shell/keybindings]
+# Super+Space = Spotlight-style search
+toggle-overview=['<Super>space']
+# Shift+Super+3 / 4 / 5 = screenshots like macOS
+screenshot=['<Shift>Print', '<Shift><Super>3']
+show-screenshot-ui=['Print', '<Shift><Super>4', '<Shift><Super>5']
+screenshot-window=['<Alt>Print']
+
+[org/gnome/desktop/wm/keybindings]
+# free Super+Space for search; keyboard layouts move to Super+Alt+Space
+switch-input-source=['<Super><Alt>space', 'XF86Keyboard']
+switch-input-source-backward=['<Shift><Super><Alt>space', '<Shift>XF86Keyboard']
+# Super+Q closes the window, Super+H / Super+M minimise, Super+Tab switches apps
+close=['<Alt>F4', '<Super>q']
+minimize=['<Super>h', '<Super>m']
+switch-applications=['<Super>Tab']
+switch-applications-backward=['<Shift><Super>Tab']
+switch-windows=['<Alt>Tab']
+switch-windows-backward=['<Shift><Alt>Tab']
+# Ctrl+Super+F toggles full screen
+toggle-fullscreen=['<Control><Super>f']
+
+############################ Top bar & shell ############################
+[org/gnome/shell]
+enabled-extensions=['logomenu@aryan_k', 'dash-to-dock@micxgx.gmail.com', 'just-perfection-desktop@just-perfection', 'blur-my-shell@aunetx', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'compiz-alike-magic-lamp-effect@hermes83.github.com', 'gsconnect@andyholmes.github.io', 'caffeine@patapon.info', 'add-to-steam@pupper.space', 'restartto@tiagoporsch.github.io', 'bazaar-integration@kolunmi.github.io']
+favorite-apps=['org.gnome.Nautilus.desktop', 'org.mozilla.firefox.desktop', 'org.gnome.Calendar.desktop', 'steam.desktop', 'net.lutris.Lutris.desktop', 'io.github.kolunmi.Bazaar.desktop', 'org.gnome.Ptyxis.desktop', 'org.gnome.Settings.desktop']
+disable-user-extensions=false
+
+[org/gnome/shell/extensions/user-theme]
+name='WhiteSur-Dark'
+
+# Apple-menu-style logo menu in the top-left corner
+[org/gnome/shell/extensions/Logo-menu]
+show-activities-button=false
+use-custom-icon=true
+custom-icon-path='/usr/share/bayzite/menu-logo.svg'
+menu-button-icon-size=18
+show-power-options=true
+show-lockscreen=true
+
+# Clock on the right, boot to the desktop (not the overview)
+[org/gnome/shell/extensions/just-perfection]
+clock-menu-position=1
+clock-menu-position-offset=0
+startup-status=0
+activities-button=false
+support-notifier-type=0
+window-demands-attention-focus=true
+
+############################ The Dock ############################
+[org/gnome/shell/extensions/dash-to-dock]
+dock-position='BOTTOM'
+dock-fixed=true
+intellihide=false
+autohide=false
+extend-height=false
+always-center-icons=true
+dash-max-icon-size=52
+icon-size-fixed=false
+show-trash=true
+show-mounts=false
+show-show-apps-button=true
+show-apps-at-top=false
+show-running=true
+show-favorites=true
+running-indicator-style='DOT'
+click-action='focus-or-appspread'
+scroll-action='do-nothing'
+apply-custom-theme=false
+custom-theme-shrink=true
+transparency-mode='FIXED'
+background-opacity=0.35
+disable-overview-on-startup=true
+hot-keys=false
+multi-monitor=false
+height-fraction=0.9
+
+############################ Blur (frosted glass) ############################
+[org/gnome/shell/extensions/blur-my-shell/panel]
+blur=true
+static-blur=true
+
+[org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
+blur=true
+static-blur=true
+style-dash-to-dock=0
+
+[org/gnome/shell/extensions/blur-my-shell/overview]
+blur=true
+
+############################ Apps ############################
+[org/gnome/nautilus/preferences]
+default-folder-viewer='icon-view'
+show-hidden-files=false
+
+[org/gnome/nautilus/icon-view]
+default-zoom-level='medium'
+
+[org/gnome/desktop/sound]
+event-sounds=true

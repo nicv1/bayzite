@@ -1,0 +1,14 @@
+[Unit]
+Description=Bayzite: let Flatpak apps use the Mac-style GTK theme
+After=local-fs.target
+ConditionPathExists=!/var/lib/bayzite/flatpak-theme.done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bayzite-flatpak-theme
+ExecStartPost=/usr/bin/mkdir -p /var/lib/bayzite
+ExecStartPost=/usr/bin/touch /var/lib/bayzite/flatpak-theme.done
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

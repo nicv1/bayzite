@@ -1,0 +1,5 @@
+cosign.key
+output/
+_build*
+*.iso
+disk_config/iso-rendered.toml

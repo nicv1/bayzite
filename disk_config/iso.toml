@@ -1,0 +1,35 @@
+# Installer (ISO) settings used by .github/workflows/build-iso.yml.
+# __IMAGE_REF__ is filled in automatically by the workflow with
+# ghcr.io/<your-github-name>/<edition>:latest — you don't need to edit it.
+
+[customizations.installer.kickstart]
+contents = """
+%post
+# Point the installed system at your own image so updates come from your builds.
+bootc switch --mutate-in-place --transport registry __IMAGE_REF__
+
+# Secure Boot helper: queue Universal Blue's kernel/driver signing key.
+# On the first reboot a blue "MOK management" screen appears:
+# choose "Enroll MOK" -> Continue -> Yes, type:  universalblue
+if [ -f /etc/pki/akmods/certs/akmods-ublue.der ] && command -v mokutil >/dev/null && mokutil --sb-state 2>/dev/null | grep -qi enabled; then
+  mokutil --timeout -1 || true
+  printf 'universalblue\\nuniversalblue\\n' | mokutil --import /etc/pki/akmods/certs/akmods-ublue.der || true
+fi
+%end
+"""
+
+[customizations.installer.modules]
+# Users module is ON: Bayzite has no first-run wizard, so the account is
+# created right in the installer.
+enable = [
+  "org.fedoraproject.Anaconda.Modules.Storage",
+  "org.fedoraproject.Anaconda.Modules.Runtime",
+  "org.fedoraproject.Anaconda.Modules.Network",
+  "org.fedoraproject.Anaconda.Modules.Security",
+  "org.fedoraproject.Anaconda.Modules.Services",
+  "org.fedoraproject.Anaconda.Modules.Users",
+  "org.fedoraproject.Anaconda.Modules.Timezone"
+]
+disable = [
+  "org.fedoraproject.Anaconda.Modules.Subscription"
+]

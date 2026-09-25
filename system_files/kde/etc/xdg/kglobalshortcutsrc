@@ -1,0 +1,3 @@
+[services][org.kde.krunner.desktop]
+# Meta(Super)+Space opens search, like Cmd+Space on a Mac
+_launch=Meta+Space\tAlt+Space\tAlt+F2\tSearch

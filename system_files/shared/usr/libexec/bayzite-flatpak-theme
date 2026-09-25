@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+# Let Flatpak apps read the user's GTK 3/4 styling so they match the Mac theme.
+set -euo pipefail
+command -v flatpak >/dev/null || exit 0
+flatpak override --system \
+  --filesystem=xdg-config/gtk-3.0:ro \
+  --filesystem=xdg-config/gtk-4.0:ro

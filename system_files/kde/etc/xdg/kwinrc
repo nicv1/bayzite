@@ -1,0 +1,11 @@
+[Plugins]
+# "Genie" minimise animation, like macOS
+magiclampEnabled=true
+squashEnabled=false
+
+[Effect-overview]
+# no hot corner (macOS has none by default)
+BorderActivate=9
+
+[ElectricBorders]
+TopLeft=None

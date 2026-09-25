@@ -1,0 +1,10 @@
+# GTK apps running under Plasma follow the Mac-style theme too
+[org.gnome.desktop.interface]
+gtk-theme='WhiteSur-Dark'
+icon-theme='WhiteSur-dark'
+cursor-theme='WhiteSur-cursors'
+color-scheme='prefer-dark'
+font-name='Inter 10'
+
+[org.gnome.desktop.wm.preferences]
+button-layout='close,minimize,maximize:'
