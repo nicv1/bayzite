@@ -18,17 +18,28 @@ on:
         type: choice
         options:
           - all
+          - amd-intel (gnome + kde)
           - bayzite-gnome
           - bayzite-gnome-nvidia
           - bayzite-kde
           - bayzite-kde-nvidia
+      touch_user:
+        description: "Touch/handheld installer: create this user (auto-login) so no typing is needed. Leave empty for a normal ISO."
+        required: false
+        default: ""
+        type: string
+      touch_password:
+        description: "Starting password for that user (change it later in Settings)"
+        required: false
+        default: "bayzite"
+        type: string
 
 env:
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   BIB_IMAGE: "quay.io/centos-bootc/bootc-image-builder:latest"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.edition || 'all' }}-${{ inputs.touch_user || 'normal' }}
   cancel-in-progress: true
 
 jobs:
@@ -48,6 +59,8 @@ jobs:
         run: |
           if [[ "$CHOICE" == "all" ]]; then
             echo 'editions=["bayzite-gnome","bayzite-gnome-nvidia","bayzite-kde","bayzite-kde-nvidia"]' >> "$GITHUB_OUTPUT"
+          elif [[ "$CHOICE" == amd-intel* ]]; then
+            echo 'editions=["bayzite-gnome","bayzite-kde"]' >> "$GITHUB_OUTPUT"
           else
             echo "editions=[\"$CHOICE\"]" >> "$GITHUB_OUTPUT"
           fi
@@ -75,6 +88,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Prepare installer config
+        env:
+          TOUCH_USER: ${{ inputs.touch_user }}
+          TOUCH_PASSWORD: ${{ inputs.touch_password }}
         run: |
           set -euxo pipefail
           REGISTRY="${IMAGE_REGISTRY,,}"
@@ -85,7 +101,13 @@ jobs:
             echo "USER_GID=$(id -g)"
           } >> "$GITHUB_ENV"
           sed "s|__IMAGE_REF__|${IMAGE_REF}|g" disk_config/iso.toml > disk_config/iso-rendered.toml
-          cat disk_config/iso-rendered.toml
+          SUFFIX=""
+          if [[ -n "${TOUCH_USER}" ]]; then
+            python3 tools/touch_kickstart.py disk_config/iso-rendered.toml
+            SUFFIX="-touch"
+          fi
+          echo "SUFFIX=${SUFFIX}" >> "$GITHUB_ENV"
+          grep -v -- '--password=' disk_config/iso-rendered.toml
 
       # Lets the builder pull your image even while the package is still private.
       - name: Log in to GitHub Container Registry
@@ -113,7 +135,7 @@ jobs:
           OUT="${{ steps.build.outputs.output-directory }}"
           ISO="$(find "$OUT" -name '*.iso' | head -n1)"
           test -n "$ISO"
-          FINAL="$OUT/${{ matrix.edition }}-$(date -u +%Y%m%d).iso"
+          FINAL="$OUT/${{ matrix.edition }}${SUFFIX}-$(date -u +%Y%m%d).iso"
           mv "$ISO" "$FINAL"
           ( cd "$OUT" && sha256sum "$(basename "$FINAL")" > "$(basename "$FINAL").sha256" )
           ls -lh "$OUT"
@@ -123,7 +145,7 @@ jobs:
       - name: Upload ISO
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ matrix.edition }}-iso
+          name: ${{ matrix.edition }}${{ env.SUFFIX }}-iso
           path: |
             ${{ steps.name.outputs.iso }}
             ${{ steps.name.outputs.sum }}
