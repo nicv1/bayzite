@@ -55,7 +55,8 @@ jobs:
   iso:
     name: ISO ${{ matrix.edition }}
     needs: plan
-    runs-on: ubuntu-26.04
+    # 24.04: the ISO builder's internal mounts are refused on the 26.04 runners
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: read
