@@ -23,6 +23,14 @@ Steam, Proton, the gaming kernel, HDR, drivers, automatic updates and rollbacks.
 *Not sure what graphics you have?* On Windows, right-click the Start button → **Device
 Manager** → **Display adapters**.
 
+*Handheld PC (ROG Ally, Legion Go, Steam Deck…)?* Use `bayzite-handheld-gnome` or
+`bayzite-handheld-kde`. They are built on Bazzite's handheld images, so the controller,
+back buttons, power/TDP controls and Steam Game Mode all work, and a pop-up on-screen
+keyboard appears in text fields. They boot to the Mac desktop; Steam Game Mode is one tap
+away. No keyboard to type in the installer? Build the ISO with **Run workflow** →
+edition `handheld (gnome + kde)` and a name in **touch_user**: that account is created for you
+and signs in automatically.
+
 *Older NVIDIA card (GTX 900/1000)?* See [docs/ADVANCED.md](docs/ADVANCED.md#older-nvidia-cards).
 
 ---

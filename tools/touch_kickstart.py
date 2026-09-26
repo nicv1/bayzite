@@ -27,7 +27,8 @@ if [ -e /usr/sbin/gdm ] || [ -e /usr/bin/gdm ]; then
   sed -i '/^[[]daemon[]]/a AutomaticLoginEnable=True' /etc/gdm/custom.conf
   sed -i '/^AutomaticLoginEnable=True/a AutomaticLogin={user}' /etc/gdm/custom.conf
 fi
-for d in /etc/sddm.conf.d /etc/plasmalogin.conf.d; do
+# Handheld images: Bazzite's own auto-login service handles SDDM.
+[ -x /usr/libexec/bazzite-autologin ] || for d in /etc/sddm.conf.d /etc/plasmalogin.conf.d; do
   mkdir -p "$d"
   printf '[Autologin]\\nUser={user}\\nSession=plasma\\nRelogin=false\\n' > "$d/90-bayzite-autologin.conf"
 done

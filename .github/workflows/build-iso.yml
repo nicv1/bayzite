@@ -19,6 +19,9 @@ on:
         options:
           - all
           - amd-intel (gnome + kde)
+          - handheld (gnome + kde)
+          - bayzite-handheld-gnome
+          - bayzite-handheld-kde
           - bayzite-gnome
           - bayzite-gnome-nvidia
           - bayzite-kde
@@ -61,6 +64,8 @@ jobs:
             echo 'editions=["bayzite-gnome","bayzite-gnome-nvidia","bayzite-kde","bayzite-kde-nvidia"]' >> "$GITHUB_OUTPUT"
           elif [[ "$CHOICE" == amd-intel* ]]; then
             echo 'editions=["bayzite-gnome","bayzite-kde"]' >> "$GITHUB_OUTPUT"
+          elif [[ "$CHOICE" == handheld* ]]; then
+            echo 'editions=["bayzite-handheld-gnome","bayzite-handheld-kde"]' >> "$GITHUB_OUTPUT"
           else
             echo "editions=[\"$CHOICE\"]" >> "$GITHUB_OUTPUT"
           fi

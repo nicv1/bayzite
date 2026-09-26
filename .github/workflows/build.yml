@@ -1,7 +1,7 @@
 ---
 name: Build Bayzite images
 
-# Builds the four Bayzite editions on top of the latest Bazzite and publishes
+# Builds the Bayzite editions on top of the latest Bazzite and publishes
 # them to GitHub Container Registry (ghcr.io/<you>/bayzite-*).
 # Runs when you push changes, once a day (to pick up Bazzite updates), or by hand.
 on:
@@ -51,6 +51,16 @@ jobs:
             base: ghcr.io/ublue-os/bazzite-nvidia-open:stable
             desktop: kde
             title: "Bayzite KDE (NVIDIA)"
+          # Handheld PCs (ROG Ally, Legion Go, Steam Deck...): Bazzite's deck
+          # images add Steam Game Mode, controller/TDP support and an on-screen keyboard.
+          - name: bayzite-handheld-gnome
+            base: ghcr.io/ublue-os/bazzite-deck-gnome:stable
+            desktop: gnome
+            title: "Bayzite GNOME (handheld)"
+          - name: bayzite-handheld-kde
+            base: ghcr.io/ublue-os/bazzite-deck:stable
+            desktop: kde
+            title: "Bayzite KDE (handheld)"
 
     steps:
       - name: Checkout

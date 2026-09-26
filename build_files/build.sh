@@ -29,6 +29,19 @@ mkdir -p "$(readlink -f /root)"
 WORK=/tmp/bayzite-build
 mkdir -p "${WORK}"
 
+# Handheld base (bazzite-deck / bazzite-deck-gnome): Steam Game Mode,
+# InputPlumber controller support, TDP controls, SDDM auto-login.
+HANDHELD=0
+if [[ -x /usr/libexec/bazzite-autologin ]]; then HANDHELD=1; fi
+echo "Handheld base: ${HANDHELD}"
+
+# Remember the base image's on-screen keyboard setting before our kwinrc
+# replaces the file (the handheld base turns the Plasma keyboard on there).
+BASE_KWIN_IM=""
+if [[ -f /etc/xdg/kwinrc ]] && command -v kreadconfig6 >/dev/null; then
+  BASE_KWIN_IM="$(kreadconfig6 --file /etc/xdg/kwinrc --group Wayland --key InputMethod || true)"
+fi
+
 # ---------------------------------------------------------------------------
 # Files shipped in this repo
 # ---------------------------------------------------------------------------
@@ -89,6 +102,13 @@ if [[ "${DESKTOP}" == "gnome" ]]; then
 else
   fetch WhiteSur-kde "${WHITESUR_KDE_REF}" "${WORK}/kde"
   bash "${CTX}/setup-kde.sh" "${WORK}"
+fi
+
+# ---------------------------------------------------------------------------
+# Handheld extras: pop-up on-screen keyboard and boot to the Mac desktop
+# ---------------------------------------------------------------------------
+if [[ "${HANDHELD}" == 1 ]]; then
+  bash "${CTX}/setup-handheld.sh" "${DESKTOP}" "${BASE_KWIN_IM}"
 fi
 
 # ---------------------------------------------------------------------------
