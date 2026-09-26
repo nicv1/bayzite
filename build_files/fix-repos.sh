@@ -14,6 +14,14 @@ import glob, os, re, subprocess
 
 out = subprocess.run(["dnf5", "repo", "list", "--disabled"],
                      capture_output=True, text=True).stdout
+releasever = subprocess.run(["rpm", "-E", "%fedora"], capture_output=True, text=True).stdout.strip()
+basearch = os.uname().machine
+
+def expand(s):
+    # repo files use $releasever / $basearch inside key paths
+    return (s.replace("$releasever", releasever).replace("${releasever}", releasever)
+             .replace("$basearch", basearch).replace("${basearch}", basearch))
+
 disabled = set()
 for line in out.splitlines()[1:]:
     parts = line.split()
@@ -42,7 +50,9 @@ for path in glob.glob("/etc/yum.repos.d/*.repo"):
             if m:
                 opts[m.group(1).lower()] = m.group(2).strip()
         keys = re.split(r"[\s,]+", opts.get("gpgkey", ""))
-        missing_key = any(k.startswith("file://") and not os.path.exists(k[7:]) for k in keys if k)
+        missing_key = any(
+            k.startswith("file://") and "$" not in expand(k) and not os.path.exists(expand(k)[7:])
+            for k in keys if k)
         enabled = opts.get("enabled", "1").lower() in ("1", "true", "yes")
         if enabled and (sid in disabled or missing_key):
             reason = "disabled in dnf5" if sid in disabled else "missing GPG key"
